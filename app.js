@@ -5,6 +5,7 @@ const fs = require('fs/promises');
 const { connectToDB } = require('./util/database');
 require('dotenv').config();
 const cors = require('cors')
+const port = process.env.PORT || 3000;
 
 const { isAuth } = require('./middlewares/auth')
 
@@ -64,7 +65,7 @@ const main = async () => {
     try {
         await connectToDB();
         console.log("Connection Established")
-        server.listen(process.env.PORT || 3000);
+        server.listen(port);
     }
     catch (error) {
         throw error;
