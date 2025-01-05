@@ -229,10 +229,13 @@ const getDetails = async (req, res) => {
             if (!doc) {
                 throw "notfound";
             }
-            const now = Date.now();
+            const { now, date, offset } = req.body;
+            console.log(now, offset);
             if (doc.activity.length != 0) {
-                const lastLoggedIn = new Date(parseInt(doc.activity[doc.activity.length - 1]));
-                const currDate = new Date(now);
+                const lastLoggedIn = new Date(parseInt(doc.activity[doc.activity.length - 1]) + offset);
+                const currDate = new Date(now + offset);
+                console.log(lastLoggedIn, currDate);
+                console.log(lastLoggedIn.toString(), currDate.toString());
                 if (lastLoggedIn.toDateString() != currDate.toDateString()) {
                     const res = await pushActivity(payload.email, `${now}`);
                     if (!res) {
