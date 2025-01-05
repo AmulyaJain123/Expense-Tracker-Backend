@@ -222,7 +222,7 @@ ${otp}`
 const getDetails = async (req, res) => {
     try {
         const token = req.cookies?.token;
-        console.log(token);
+        console.log(token, "efwfwf", req.body);
         if (token) {
             const payload = jwt.verify(token, process.env.JWT_SECRET);
             const doc = await getProfile(payload.email);
