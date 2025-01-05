@@ -222,20 +222,17 @@ ${otp}`
 const getDetails = async (req, res) => {
     try {
         const token = req.cookies?.token;
-        console.log(token, "efwfwf", req.body);
+        console.log(token);
         if (token) {
             const payload = jwt.verify(token, process.env.JWT_SECRET);
             const doc = await getProfile(payload.email);
             if (!doc) {
                 throw "notfound";
             }
-            const { now, date, offset } = req.body;
-            console.log(now, offset);
+            const now = Date.now();
             if (doc.activity.length != 0) {
-                const lastLoggedIn = new Date(parseInt(doc.activity[doc.activity.length - 1]) + offset);
-                const currDate = new Date(now + offset);
-                console.log(lastLoggedIn, currDate);
-                console.log(lastLoggedIn.toString(), currDate.toString());
+                const lastLoggedIn = new Date(parseInt(doc.activity[doc.activity.length - 1]));
+                const currDate = new Date(now);
                 if (lastLoggedIn.toDateString() != currDate.toDateString()) {
                     const res = await pushActivity(payload.email, `${now}`);
                     if (!res) {

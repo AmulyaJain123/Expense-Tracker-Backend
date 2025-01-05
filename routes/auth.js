@@ -20,7 +20,7 @@ router.post('/reset/verifyotp', resetCheckOtp)
 
 router.post('/reset/changepassword', changePassword)
 
-router.post('/getdetails', getDetails)
+router.get('/getdetails', getDetails)
 
 
 
