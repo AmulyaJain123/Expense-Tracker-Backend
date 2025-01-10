@@ -232,8 +232,8 @@ const getDetails = async (req, res) => {
             const { now, date, offset } = req.body;
             console.log(now, offset);
             if (doc.activity.length != 0) {
-                const lastLoggedIn = new Date(parseInt(doc.activity[doc.activity.length - 1]) + offset);
-                const currDate = new Date(now + offset);
+                const lastLoggedIn = new Date(parseInt(doc.activity[doc.activity.length - 1]) - offset);
+                const currDate = new Date(now - offset);
                 console.log(lastLoggedIn, currDate);
                 console.log(lastLoggedIn.toString(), currDate.toString());
                 if (lastLoggedIn.toDateString() != currDate.toDateString()) {
