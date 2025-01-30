@@ -12,7 +12,7 @@ const { getCountOfFriends } = require('../models/friends');
 const { getUserByUserId } = require('../models/user');
 
 
-
+const parentFolderName = process.env.CLOUDINARY_PARENT_FOLDER;
 
 const getMyProfile = async (req, res) => {
     try {
@@ -90,7 +90,7 @@ const profilePicUpload = async (req, res) => {
     try {
         console.log(req.file);
         const filename = req.file.path;
-        const result = await t1UploadToCloudinary(filename, `${req.userDetails.userId}profilePic`, '500', '500', `users/${req.userDetails.userId}/profile`);
+        const result = await t1UploadToCloudinary(filename, `${req.userDetails.userId}profilePic`, '500', '500', `${parentFolderName}/users/${req.userDetails.userId}/profile`);
         await fs.rm(req.file.path);
         if (!result) {
             throw "failed";
@@ -110,7 +110,7 @@ const profilePicPreview = async (req, res) => {
     try {
         console.log(req.file);
         const filename = req.file.path;
-        const result = await t1UploadToCloudinary(filename, `${req.userDetails.userId}profilePicPreview`, '500', '500', `temp/${req.userDetails.userId}`);
+        const result = await t1UploadToCloudinary(filename, `${req.userDetails.userId}profilePicPreview`, '500', '500', `${parentFolderName}/temp/${req.userDetails.userId}`);
         await fs.rm(req.file.path);
         if (!result) {
             throw "failed";
@@ -133,7 +133,7 @@ const qrCodeUpload = async (req, res) => {
             await fs.rm(newFileName);
             throw "cropunsuccessful";
         }
-        const result = await t1UploadToCloudinary(newFileName, `${req.userDetails.userId}qrCode`, '500', '500', `users/${req.userDetails.userId}/profile`);
+        const result = await t1UploadToCloudinary(newFileName, `${req.userDetails.userId}qrCode`, '500', '500', `${parentFolderName}/users/${req.userDetails.userId}/profile`);
         await fs.rm(req.file.path);
         await fs.rm(newFileName);
         if (!result) {
@@ -161,7 +161,7 @@ const qrCodePreview = async (req, res) => {
             await fs.rm(newFileName);
             throw "cropunsuccessful";
         }
-        const result = await t1UploadToCloudinary(newFileName, `${req.userDetails.userId}qrCode`, '500', '500', `temp/${req.userDetails.userId}`);
+        const result = await t1UploadToCloudinary(newFileName, `${req.userDetails.userId}qrCode`, '500', '500', `${parentFolderName}/temp/${req.userDetails.userId}`);
         await fs.rm(req.file.path);
         await fs.rm(newFileName);
         if (!result) {

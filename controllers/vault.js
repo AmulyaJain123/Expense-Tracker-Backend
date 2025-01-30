@@ -3,12 +3,14 @@ const { generateId } = require('../util/nodemailer')
 const { addReceipt, fetchTags, deleteTag, appendTag, addWarranty, fetchReceipts, fetchReceipt, removeReceipt, fetchWarranties, fetchWarranty, removeWarranty, changeExp } = require('../models/vault')
 const fs = require('fs/promises');
 
+const parentFolderName = process.env.CLOUDINARY_PARENT_FOLDER;
+
 const imagePreview = async (req, res) => {
     try {
         console.log(req.file);
         const filename = req.file.path;
         const name = req.params.par1;
-        const result = await t2UploadToCloudinary(filename, `${req.userDetails.userId}vaultImagePreview${name}`, `temp/${req.userDetails.userId}`, req.file.mimetype);
+        const result = await t2UploadToCloudinary(filename, `${req.userDetails.userId}vaultImagePreview${name}`, `${parentFolderName}/temp/${req.userDetails.userId}`, req.file.mimetype);
         await fs.rm(req.file.path);
         if (!result) {
             throw "failed";
@@ -100,7 +102,7 @@ const getReceipt = async (req, res) => {
 
 const deleteReceipt = async (req, res) => {
     try {
-        const response = await deleteFolderInCloudinary(`users/${req.userDetails.userId}/vault/receipts/${req.body.recId}`);
+        const response = await deleteFolderInCloudinary(`${parentFolderName}/users/${req.userDetails.userId}/vault/receipts/${req.body.recId}`);
         if (!response) {
             throw "failed";
         }
@@ -117,7 +119,7 @@ const deleteReceipt = async (req, res) => {
 
 const deleteWarranty = async (req, res) => {
     try {
-        const response = await deleteFolderInCloudinary(`users/${req.userDetails.userId}/vault/warranties/${req.body.warId}`);
+        const response = await deleteFolderInCloudinary(`${parentFolderName}/users/${req.userDetails.userId}/vault/warranties/${req.body.warId}`);
         if (!response) {
             throw "failed";
         }
@@ -163,7 +165,7 @@ const createReceipt = async (req, res) => {
     try {
         console.log(req.body);
         const id = generateId();
-        const result = await t3UploadToCloudinary(req.body.files, `users/${req.userDetails.userId}/vault/receipts/${id}`);
+        const result = await t3UploadToCloudinary(req.body.files, `${parentFolderName}/users/${req.userDetails.userId}/vault/receipts/${id}`);
         if (!result) {
             throw "uploadFailed";
         }
@@ -188,7 +190,7 @@ const createWarranty = async (req, res) => {
     try {
         console.log(req.body);
         const id = generateId();
-        const result = await t3UploadToCloudinary(req.body.files, `users/${req.userDetails.userId}/vault/warranties/${id}`);
+        const result = await t3UploadToCloudinary(req.body.files, `${parentFolderName}/users/${req.userDetails.userId}/vault/warranties/${id}`);
         if (!result) {
             throw "uploadFailed";
         }

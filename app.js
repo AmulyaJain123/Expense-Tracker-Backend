@@ -26,8 +26,10 @@ app.use(bodyParser.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, 'public')))
 
+const FRONTEND_URL = process.env.STATUS === 'dev' ? process.env.FRONTEND_URL_DEV : process.env.FRONTEND_URL_PROD;
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL,
+    origin: FRONTEND_URL,
     credentials: true
 }));
 
@@ -35,7 +37,7 @@ app.use(cors({
 app.use(cookieParser())
 
 app.use((req, res, next) => {
-    console.log(req.headers, req.cookies);
+    // console.log(req.headers, req.cookies);
     next();
 })
 
