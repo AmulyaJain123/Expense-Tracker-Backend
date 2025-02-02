@@ -5,7 +5,11 @@ const fs = require('fs/promises');
 const { connectToDB } = require('./util/database');
 require('dotenv').config();
 const cors = require('cors')
+const { Server } = require('socket.io')
+const { userToSocketMap } = require('./util/state');
+const { setIo } = require('./util/socket');
 const port = process.env.PORT || 3000;
+const jwt = require('jsonwebtoken')
 
 const { isAuth } = require('./middlewares/auth')
 
@@ -15,6 +19,10 @@ const { vaultRouter } = require('./routes/vault')
 const { friendsRouter } = require('./routes/friends')
 const { splitsRouter } = require('./routes/splits')
 const { trackRouter } = require('./routes/track')
+const { notificationsRouter } = require('./routes/notifications')
+const { readNotifications } = require('./models/notifications')
+
+
 
 const app = express();
 const server = http.createServer(app)
@@ -55,10 +63,80 @@ app.use('/split', splitsRouter)
 
 app.use('/track', trackRouter)
 
+app.use('/notifications', notificationsRouter)
 
 
+const io = new Server(server, {
+    cors: {
+        origin: [FRONTEND_URL],
+        credentials: true
+    },
+
+})
+
+setIo(io);
+
+const getIo = () => {
+    return io;
+}
 
 
+io.on('connection', (socket) => {
+    try {
+        console.log("Connection Formed", socket.id);
+        // Just after Connection
+        try {
+            const cookies = {}
+            console.log(socket.handshake.headers.cookie.split(' '));
+            socket.handshake.headers.cookie.split(' ').forEach((str) => {
+                const key = str.split('=')[0];
+                console.log(str.split('=')[1]);
+                const value = str.split('=')[1].substr(0, str.split('=')[1].length - 1);
+                cookies[key] = value;
+            });
+            const token = cookies['token'];
+            console.log("Token", token);
+            if (token) {
+                const payload = jwt.verify(token, process.env.JWT_SECRET);
+                socket.userDetails = payload;
+                console.log(payload);
+                if (userToSocketMap[payload.userId]) {
+                    userToSocketMap[payload.userId].push(socket.id);
+                } else {
+                    userToSocketMap[payload.userId] = [socket.id];
+                }
+            } else {
+                throw "notfound";
+            }
+        } catch (err) {
+            console.log(err);
+            socket.disconnect(true);
+        }
+
+        socket.join(socket.userDetails.userId);
+
+        socket.on('disconnect', () => {
+            userToSocketMap[socket.userDetails.userId].splice(userToSocketMap[socket.userDetails.userId].indexOf(socket.id), 1);
+            if (userToSocketMap[socket.userDetails.userId].length === 0) {
+                delete userToSocketMap[socket.userDetails.userId];
+            }
+        })
+
+        socket.on('test', (str) => {
+            console.log(str);
+        })
+
+        socket.on('read-notifications', (bool) => {
+            console.log(bool)
+            readNotifications(socket.userDetails.email, socket.userDetails.userId);
+        })
+
+        console.log(userToSocketMap);
+    } catch (err) {
+        console.log(err);
+        socket.disconnect(true);
+    }
+})
 
 
 
@@ -74,3 +152,4 @@ const main = async () => {
     }
 }
 main();
+

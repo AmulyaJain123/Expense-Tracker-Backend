@@ -1,6 +1,8 @@
 const { newSplit, fetchSavedSplits, fetchSavedSplit, removeSavedSplit, share, fetchSharedSplits, fetchSharedSplit, removeSharedSplit } = require('../models/splits')
 const fs = require('fs/promises');
 const { generateId } = require('../util/nodemailer')
+const { sendSplitShareNotification } = require('./notifications')
+
 
 
 const createSplit = async (req, res) => {
@@ -101,6 +103,9 @@ const shareSplit = async (req, res) => {
         const result = await share(req.userDetails.email, req.userDetails.userId, req.body.splitId, req.body.friends);
         if (result === null) {
             throw "notfound";
+        }
+        for (let i of req.body.friends) {
+            await sendSplitShareNotification(req.userDetails.email, req.userDetails.userId, i, req.body.splitId);
         }
         res.status(200).send();
     } catch (err) {

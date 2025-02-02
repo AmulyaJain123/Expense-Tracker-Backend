@@ -8,6 +8,7 @@ const isAuthenticated = async (req, res, next) => {
     }
     // return next();    // Bypass the Authentication step
     try {
+        console.log("Heeehee")
         const token = req.cookies?.token;
         console.log(token);
         if (token) {

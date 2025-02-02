@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { authTransport, generateOtp, generateUserId } = require('../util/nodemailer')
 const { storeOtp, verifyOtp } = require('../models/auth')
+const { fetchUnseenNotifications } = require('../models/notifications')
+
 
 const getOtp = async (req, res) => {
     let { email } = req.body;
@@ -232,8 +234,10 @@ const getDetails = async (req, res) => {
             const { now, date, offset } = req.body;
             console.log(now, offset);
             if (doc.activity.length != 0) {
-                const lastLoggedIn = new Date(parseInt(doc.activity[doc.activity.length - 1]) - offset);
-                const currDate = new Date(now - offset);
+                const localOffset = new Date().getTimezoneOffset() * 60 * 1000;
+                console.log(localOffset, new Date().getTimezoneOffset());
+                const lastLoggedIn = new Date(parseInt(doc.activity[doc.activity.length - 1]) - offset + localOffset);
+                const currDate = new Date(now - offset + localOffset);
                 console.log(lastLoggedIn, currDate);
                 console.log(lastLoggedIn.toString(), currDate.toString());
                 if (lastLoggedIn.toDateString() != currDate.toDateString()) {
@@ -249,11 +253,12 @@ const getDetails = async (req, res) => {
                 }
             }
             const finalDoc = await getProfile(payload.email);
+            const notifications = await fetchUnseenNotifications(payload.email, payload.userId);
             if (!finalDoc) {
                 throw "notfound";
             }
 
-            res.status(200).json(finalDoc);
+            res.status(200).json([finalDoc, notifications]);
         } else {
             throw "notfound";
         }

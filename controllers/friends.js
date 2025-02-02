@@ -1,4 +1,5 @@
 const { getFriends, getQueryResults, createNewRequest, fetchSentRequests, fetchRecievedRequests, closeFriendRequest, deleteFriend } = require('../models/friends')
+const { sendFriendRequestRecievedNotification, sendRemoveFriendNotification, sendCloseRequestNotification } = require('./notifications')
 
 const fs = require('fs/promises');
 
@@ -36,6 +37,9 @@ const sendFriendRequest = async (req, res) => {
         const result = await createNewRequest(req.userDetails.email, req.userDetails.userId, req.body.email, req.body.userId);
         if (result === null) {
             throw "notfound";
+        }
+        if (result) {
+            const result2 = await sendFriendRequestRecievedNotification(req.userDetails.email, req.userDetails.userId, req.body.email, req.body.userId);
         }
         console.log(result);
         res.status(200).json(result ? 'sent' : 'recieved');
@@ -82,6 +86,7 @@ const closeRequest = async (req, res) => {
         if (result === null) {
             throw "notfound";
         }
+        const result2 = await sendCloseRequestNotification(req.userDetails.email, req.userDetails.userId, req.body.email, req.body.userId, req.body.val);
         res.status(200).send();
     } catch (err) {
         console.log(err);
@@ -95,6 +100,7 @@ const removeFriend = async (req, res) => {
         if (result === null) {
             throw "notfound";
         }
+        const result2 = await sendRemoveFriendNotification(req.userDetails.email, req.userDetails.userId, req.body.email, req.body.userId);
         res.status(200).send();
     } catch (err) {
         console.log(err);
