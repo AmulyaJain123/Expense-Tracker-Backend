@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
             socket.handshake.headers.cookie.split(' ').forEach((str) => {
                 const key = str.split('=')[0];
                 console.log(str.split('=')[1]);
-                const value = str.split('=')[1].substr(0, str.split('=')[1].length - 1);
+                const value = str.split('=')[1].at(-1) === ';' ? str.split('=')[1].substr(0, str.split('=')[1].length - 1) : str.split('=')[1];
                 cookies[key] = value;
             });
             const token = cookies['token'];
