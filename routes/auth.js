@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getOtp, checkOtp, resendOtp, createAccount, signIn, resetGetOtp, resetResendOtp, resetCheckOtp, changePassword, getDetails } = require('../controllers/auth');
+const { getOtp, checkOtp, resendOtp, createAccount, signIn, resetGetOtp, resetResendOtp, resetCheckOtp, changePassword, getDetails, logOut } = require('../controllers/auth');
 
 router.post('/signup/getotp', getOtp)
 
@@ -21,6 +21,8 @@ router.post('/reset/verifyotp', resetCheckOtp)
 router.post('/reset/changepassword', changePassword)
 
 router.post('/getdetails', getDetails)
+
+router.get('/logout', logOut)
 
 
 

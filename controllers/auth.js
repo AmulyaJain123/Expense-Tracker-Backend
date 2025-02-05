@@ -6,6 +6,7 @@ const { authTransport, generateOtp, generateUserId } = require('../util/nodemail
 const { storeOtp, verifyOtp } = require('../models/auth')
 const { fetchUnseenNotifications } = require('../models/notifications')
 
+const dom = process.env.STATUS === 'dev' ? 'localhost' : BACKEND_DOMAIN;
 
 const getOtp = async (req, res) => {
     let { email } = req.body;
@@ -159,6 +160,21 @@ const changePassword = async (req, res) => {
 
     }
 }
+const logOut = async (req, res) => {
+    try {
+        res.clearCookie("token", {
+            path: "/",
+            domain: dom, // Required if originally set
+            secure: true,
+            sameSite: "None",
+        });
+
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
 
 const signIn = async (req, res) => {
     try {
@@ -278,3 +294,4 @@ exports.resetResendOtp = resetResendOtp;
 exports.resetCheckOtp = resetCheckOtp;
 exports.changePassword = changePassword;
 exports.getDetails = getDetails;
+exports.logOut = logOut;
