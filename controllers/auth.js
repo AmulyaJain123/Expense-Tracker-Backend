@@ -6,7 +6,7 @@ const { authTransport, generateOtp, generateUserId } = require('../util/nodemail
 const { storeOtp, verifyOtp } = require('../models/auth')
 const { fetchUnseenNotifications } = require('../models/notifications')
 
-const dom = process.env.STATUS === 'dev' ? 'localhost' : BACKEND_DOMAIN;
+const dom = process.env.STATUS === 'dev' ? 'localhost' : process.env.BACKEND_DOMAIN;
 
 const getOtp = async (req, res) => {
     let { email } = req.body;
