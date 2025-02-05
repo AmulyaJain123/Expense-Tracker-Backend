@@ -162,12 +162,10 @@ const changePassword = async (req, res) => {
 }
 const logOut = async (req, res) => {
     try {
-        console.log('Logout Request')
+        console.log('Logout Request', req.cookies?.token)
+
         res.clearCookie("token", {
-            path: "/",
-            domain: dom, // Required if originally set
-            secure: true,
-            sameSite: "None",
+            secure: true, sameSite: 'None', path: '/'
         });
         res.status(200).send();
     } catch (err) {
