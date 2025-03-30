@@ -3,22 +3,6 @@ const { getProfileByuserId } = require('../models/profile')
 const { getFriends } = require('../models/friends')
 const { generateId } = require('../util/nodemailer')
 
-
-const sharedToSchema = mongoose.Schema({
-    username: {
-        type: 'String',
-    },
-    userId: {
-        type: 'String',
-    },
-    profilePic: {
-        type: 'String',
-    },
-    sharedOn: {
-        type: 'String',
-    }
-})
-
 const shareSchema = mongoose.Schema({
     name: {
         type: 'String',
@@ -75,7 +59,12 @@ const singleSplitSchema = mongoose.Schema({
         },
     },
     sharedTo: {
-        type: [sharedToSchema],
+        type: [{
+            userInfo: {
+                type: mongoose.Schema.Types.ObjectId, ref: "Profile"
+            },
+            sharedOn: 'String'
+        }],
         default: []
     },
     friends: {
@@ -110,17 +99,7 @@ const singleSharedSplitSchema = mongoose.Schema({
         sharedOn: {
             type: 'String',
         },
-        sharedBy: {
-            username: {
-                type: 'String',
-            },
-            userId: {
-                type: 'String',
-            },
-            profilePic: {
-                type: 'String',
-            },
-        },
+        sharedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Profile" },
     },
     friends: {
         type: [friendSchema],
@@ -213,7 +192,7 @@ async function fetchSavedSplits(email, userId) {
                 throw "userCreationFailed";
             }
         }
-        const doc = await Split.findOne({ email: email });
+        const doc = await Split.findOne({ email: email }).populate('splits.sharedTo.userInfo', 'fullname username userId profilePic');
         if (!doc) {
             throw "failed";
         }
@@ -233,7 +212,7 @@ async function fetchSharedSplits(email, userId) {
                 throw "userCreationFailed";
             }
         }
-        const doc = await Split.findOne({ email: email });
+        const doc = await Split.findOne({ email: email }).populate('sharedSplits.splitInfo.sharedBy', 'fullname username userId profilePic');
         if (!doc) {
             throw "failed";
         }
@@ -253,7 +232,28 @@ async function fetchSavedSplit(email, userId, splitId) {
                 throw "userCreationFailed";
             }
         }
-        const doc = await Split.findOne({ email: email });
+        const doc = await Split.findOne({ email: email }).populate('splits.sharedTo.userInfo', 'username fullname userId profilePic');
+        if (!doc) {
+            throw "failed";
+        }
+        const split = doc.splits.find((i) => i.splitId === splitId);
+        if (!split) {
+            throw "notfound";
+        }
+        return split;
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
+}
+
+async function fetchSavedSplitFromUserId(userId, splitId) {
+    try {
+        const user = await getProfileByuserId(userId);
+        if (!user) {
+            throw "failed";
+        }
+        const doc = await Split.findOne({ email: user.email }).populate('splits.sharedTo.userInfo', 'username fullname userId profilePic');
         if (!doc) {
             throw "failed";
         }
@@ -277,7 +277,7 @@ async function fetchSharedSplit(email, userId, splitId) {
                 throw "userCreationFailed";
             }
         }
-        const doc = await Split.findOne({ email: email });
+        const doc = await Split.findOne({ email: email }).populate('sharedSplits.splitInfo.sharedBy', 'fullname username userId profilePic');
         if (!doc) {
             throw "failed";
         }
@@ -376,7 +376,7 @@ async function shareToFriend(email, userId, splitId, email2, userId2, now) {
             friends: doc.splits[ind].friends,
             bills: doc.splits[ind].bills,
             split: doc.splits[ind].split,
-            splitInfo: { ...doc.splits[ind].splitInfo, sharedBy: { username: sender.username, userId: sender.userId, profilePic: sender.profilePic }, sharedOn: now },
+            splitInfo: { ...doc.splits[ind].splitInfo, sharedBy: sender._id, sharedOn: now },
             splitId: `${generateId()}`,
         })
         doc2.markModified('sharedSplits');
@@ -445,12 +445,7 @@ async function share(email, userId, splitId, friends) {
             if (!pro) {
                 throw "friendnotfound";
             }
-            arr.push({
-                username: pro.username,
-                userId: pro.userId,
-                profilePic: pro.profilePic,
-                sharedOn: now
-            })
+            arr.push({ userInfo: pro._id, sharedOn: now })
         }
         console.log(arr, doc.splits[ind].sharedTo.concat(arr));
         doc.splits[ind].sharedTo = doc.splits[ind].sharedTo.concat(arr);
@@ -464,7 +459,6 @@ async function share(email, userId, splitId, friends) {
     }
 }
 
-
 const Split = mongoose.model('Split', splitSchema);
 
 exports.splitModel = Split;
@@ -477,6 +471,7 @@ exports.fetchSharedSplits = fetchSharedSplits;
 exports.fetchSharedSplit = fetchSharedSplit;
 exports.removeSharedSplit = removeSharedSplit;
 exports.getCountOfSplits = getCountOfSplits;
+exports.fetchSavedSplitFromUserId = fetchSavedSplitFromUserId;
 
 
 

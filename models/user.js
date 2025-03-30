@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const { addProfile, editUsername } = require('../models/profile')
+const { addProfile, editFullname } = require('../models/profile')
 
 const userSchema = mongoose.Schema({
     username: {
@@ -15,6 +15,9 @@ const userSchema = mongoose.Schema({
     userId: {
         type: 'String'
     },
+    fullname: {
+        type: 'String'
+    },
 })
 
 async function findUserByEmail(email) {
@@ -27,7 +30,7 @@ async function findUserByEmail(email) {
 }
 
 async function findUserByUsername(username) {
-    const res = await User.exists({ username: username });
+    const res = await User.exists({ username: { $regex: new RegExp("^" + username + "$", "i") } });
     if (res) {
         const doc = await User.findById(res);
         return doc;
@@ -35,11 +38,11 @@ async function findUserByUsername(username) {
     return null;
 }
 
-async function addUser(email, password, username, userId) {
+async function addUser(email, password, username, userId, fullname) {
     try {
-        const newUser = new User({ email: email, password: password, username: username, userId: userId });
+        const newUser = new User({ email: email, password: password, username: username, userId: userId, fullname: fullname });
         await newUser.save();
-        await addProfile(email, username, userId);
+        await addProfile(email, username, userId, fullname);
         return true;
     } catch (err) {
         console.log(err);
@@ -93,22 +96,20 @@ async function editUser(email, username, bio, profilePic) {
     }
 }
 
-async function changeUsername(email, username) {
+async function changeFullname(email, fullname) {
     try {
         const res = await User.exists({ email: email });
         if (!res) {
             throw "notfound";
         }
-        const res2 = await editUsername(email, username);
+        const res2 = await editFullname(email, fullname);
         if (!res2) {
             throw "failed";
         }
-        const result = await User.updateOne({ email: email }, { $set: { username: username } });
-        if (!result) {
-            throw "failed";
-        }
+        const user = await User.findOne({ email: email });
+        user.fullname = fullname;
+        await user.save()
         return true;
-
     } catch (err) {
         console.log(err);
         return null;
@@ -149,7 +150,7 @@ exports.allUsers = allUsers;
 exports.editUser = editUser;
 exports.getUserByEmail = getUserByEmail;
 exports.changePass = changePass;
-exports.changeUsername = changeUsername;
+exports.changeFullname = changeFullname;
 exports.getUserByUserId = getUserByUserId;
 
 

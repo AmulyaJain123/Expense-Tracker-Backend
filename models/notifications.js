@@ -130,6 +130,20 @@ async function readNotifications(email, userId) {
         return null;
     }
 }
+
+async function removeNotification(email, userId, data) {
+    try {
+        const doc = await Notification.findOne({ email: email });
+        doc.notifications = doc.notifications.filter((i) => i._id != data.id)
+        await doc.save();
+        return true;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+
 const Notification = mongoose.model('Notification', notificationSchema);
 
 
@@ -138,6 +152,7 @@ exports.newNotification = newNotification;
 exports.fetchNotifications = fetchNotifications;
 exports.fetchUnseenNotifications = fetchUnseenNotifications;
 exports.readNotifications = readNotifications;
+exports.removeNotification = removeNotification;
 
 
 

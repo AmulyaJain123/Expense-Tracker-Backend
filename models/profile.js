@@ -13,6 +13,9 @@ const profileSchema = mongoose.Schema({
     joinedOn: {
         type: 'String'
     },
+    fullname: {
+        type: 'String'
+    },
     upiId: {
         type: 'String',
         default: null
@@ -31,10 +34,10 @@ const profileSchema = mongoose.Schema({
     },
 })
 
-async function addProfile(email, username, userId) {
+async function addProfile(email, username, userId, fullname) {
     try {
         const currDate = new Date().toISOString();
-        const doc = new Profile({ email, username, userId, joinedOn: currDate });
+        const doc = new Profile({ email, username, userId, joinedOn: currDate, fullname: fullname });
         await doc.save();
         return true;
     } catch (err) {
@@ -69,6 +72,19 @@ async function getProfileByuserId(userId) {
     }
 }
 
+async function getProfileById(id) {
+    try {
+        const doc = await Profile.findOne({ _id: id });
+        if (!doc) {
+            throw "notfound";
+        }
+        return doc;
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
+}
+
 async function fetchPublicProfile(userID) {
     try {
         const doc = await Profile.findOne({ userId: userID });
@@ -76,8 +92,8 @@ async function fetchPublicProfile(userID) {
             throw "notfound";
         }
         console.log(doc);
-        const { userId, username, joinedOn, upiId, qrCode, profilePic, activity } = doc;
-        const obj = { userId, username, joinedOn, upiId, qrCode, profilePic, activity }
+        const { userId, username, joinedOn, upiId, qrCode, profilePic, activity, fullname } = doc;
+        const obj = { userId, username, joinedOn, upiId, qrCode, profilePic, activity, fullname }
         console.log(obj);
         return obj;
     } catch (err) {
@@ -86,9 +102,9 @@ async function fetchPublicProfile(userID) {
     }
 }
 
-async function editUsername(email, username) {
+async function editFullname(email, fullname) {
     try {
-        const res2 = await Profile.updateOne({ email: email }, { $set: { username: username } });
+        const res2 = await Profile.updateOne({ email: email }, { $set: { fullname: fullname } });
         if (!res2) {
             throw "failed";
         }
@@ -173,15 +189,17 @@ const Profile = mongoose.model('Profile', profileSchema);
 
 
 exports.profileModel = Profile;
+exports.profileSchema = profileSchema;
 exports.addProfile = addProfile;
 exports.getProfile = getProfile;
-exports.editUsername = editUsername;
+exports.editFullname = editFullname;
 exports.editUpi = editUpi;
 exports.editProfilePic = editProfilePic;
 exports.pushActivity = pushActivity;
 exports.fetchPublicProfile = fetchPublicProfile;
 exports.getProfileByuserId = getProfileByuserId;
 exports.editQrCode = editQrCode;
+exports.getProfileById = getProfileById;
 
 
 

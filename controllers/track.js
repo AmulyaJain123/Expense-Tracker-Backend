@@ -1,8 +1,8 @@
-const { fetchCategories, appendCategory, removeCategory, addTransaction, fetchTransactions, fetchTransaction, removeTransaction } = require('../models/track')
+const { fetchCategories, appendCategory, removeCategory, addTransaction, fetchTransactions, fetchTransaction, removeTransaction, fetchTags, appendTag, removeTag } = require('../models/track')
 const fs = require('fs/promises');
 const { dummyData } = require('../util/dummy')
 const { generateId } = require('../util/nodemailer')
-const { generateColors } = require('../util/colors')
+const { generateColors, generateTagColors } = require('../util/colors')
 
 
 const getCategories = async (req, res) => {
@@ -12,6 +12,20 @@ const getCategories = async (req, res) => {
             throw "notfound";
         }
         res.status(200).json(result);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
+
+const getCategoriesNTags = async (req, res) => {
+    try {
+        const result = await fetchCategories(req.userDetails.email, req.userDetails.userId);
+        if (!result) {
+            throw "notfound";
+        }
+        const result2 = await fetchTags(req.userDetails.email, req.userDetails.userId);
+        res.status(200).json({ ...result, tags: result2 });
     } catch (err) {
         console.log(err);
         res.status(500).send();
@@ -35,10 +49,12 @@ const getTransactionsNCategories = async (req, res) => {
     try {
         const result = await fetchCategories(req.userDetails.email, req.userDetails.userId);
         const result2 = await fetchTransactions(req.userDetails.email, req.userDetails.userId);
+        const result3 = await fetchTags(req.userDetails.email, req.userDetails.userId);
+
         if (!result || !result2) {
             throw "notfound";
         }
-        res.status(200).json({ transactions: result2, categories: result });
+        res.status(200).json({ transactions: result2, categories: result, tags: result3 });
     } catch (err) {
         console.log(err);
         res.status(500).send();
@@ -49,11 +65,14 @@ const getDashboardData = async (req, res) => {
     try {
         const result = await fetchCategories(req.userDetails.email, req.userDetails.userId);
         const result2 = await fetchTransactions(req.userDetails.email, req.userDetails.userId);
+        const result3 = await fetchTags(req.userDetails.email, req.userDetails.userId);
         if (!result || !result2) {
             throw "notfound";
         }
         const colors = generateColors(result);
-        res.status(200).json({ transactions: result2, categories: result, colors: colors });
+        const tagColors = generateTagColors(result3);
+
+        res.status(200).json({ transactions: result2, categories: result, tags: result3, colors: colors, tagColors: tagColors });
     } catch (err) {
         console.log(err);
         res.status(500).send();
@@ -137,6 +156,48 @@ const createTransaction = async (req, res) => {
     }
 }
 
+const addTags = async (req, res) => {
+    try {
+        if (RegExp(/\b\d+ others\b/i).test(req.body.value.trim())) {
+            return res.status(500).json({ error: 'Tag Forbidden' });
+        }
+        const result = await appendTag(req.userDetails.email, req.userDetails.userId, req.body.value.trim());
+        if (result !== true) {
+            res.status(500).json({ error: result });
+        }
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Something went wrong.' });
+    }
+}
+
+const getTags = async (req, res) => {
+    try {
+        const result = await fetchTags(req.userDetails.email, req.userDetails.userId);
+        if (result === null) {
+            throw 'failed';
+        }
+        res.status(200).json(result);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
+
+const deleteTag = async (req, res) => {
+    try {
+        const result = await removeTag(req.userDetails.email, req.userDetails.userId, req.body.value);
+        if (!result) {
+            throw "failed";
+        }
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
+
 
 
 
@@ -150,5 +211,9 @@ exports.getTransactionsNCategories = getTransactionsNCategories;
 exports.getTransaction = getTransaction;
 exports.deleteTransaction = deleteTransaction;
 exports.getDashboardData = getDashboardData;
+exports.getCategoriesNTags = getCategoriesNTags;
+exports.addTags = addTags;
+exports.getTags = getTags;
+exports.deleteTag = deleteTag;
 
 

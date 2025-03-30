@@ -123,8 +123,8 @@ async function getFriends(email, userId) {
             if (!doc2) {
                 throw "friendnotfound";
             }
-            const { email, userId, username, joinedOn, upiId, qrCode, profilePic, activity, friends } = doc2;
-            const obj = { email, userId, username, joinedOn, upiId, qrCode, profilePic, activity, friends, friendsAt: i.date }
+            const { email, userId, username, joinedOn, upiId, qrCode, profilePic, activity, friends, fullname } = doc2;
+            const obj = { email, userId, username, joinedOn, upiId, qrCode, profilePic, activity, friends, friendsAt: i.date, fullname }
             ans.push(obj);
         }
         return ans;
@@ -151,14 +151,14 @@ async function getQueryResults(email, userId, query) {
         const res = await profileModel.find({
             $or: [
                 { username: { $regex: query, $options: "i" } },
-                { userId: { $regex: query, $options: "i" } }
+                { fullname: { $regex: query, $options: "i" } }
             ]
         });
         const mainEmail = email;
         let ans = res.filter((i) => i.email != email);
         for (let i = 0; i < ans.length; ++i) {
-            const { email, userId, username, joinedOn, upiId, qrCode, profilePic, activity, friends } = ans[i];
-            const obj = { email, userId, username, joinedOn, upiId, qrCode, profilePic, activity, friends };
+            const { email, userId, username, joinedOn, upiId, qrCode, profilePic, activity, friends, fullname } = ans[i];
+            const obj = { email, userId, username, joinedOn, upiId, qrCode, profilePic, activity, friends, fullname };
             if (!userIdOfFriends.includes(ans[i].userId)) {
                 obj.status = 'User';
                 const temp = await Request.exists({ 'sender.email': mainEmail, 'reciever.email': email, status: 'sent' })
@@ -251,7 +251,7 @@ async function fetchSentRequests(email, userId) {
         const ans = [];
         for (let i of doc.requestsSent) {
             const doc2 = await profileModel.findOne({ email: i.reciever.email });
-            const obj = { status: i.status, email: i.reciever.email, userId: i.reciever.userId, resolvedDate: i.resolvedDate, sendDate: i.sendDate, profilePic: doc2.profilePic, username: doc2.username }
+            const obj = { status: i.status, email: i.reciever.email, userId: i.reciever.userId, resolvedDate: i.resolvedDate, sendDate: i.sendDate, profilePic: doc2.profilePic, username: doc2.username, fullname: doc2.fullname }
             ans.push(obj);
         }
         console.log(ans);
@@ -311,7 +311,7 @@ async function fetchRecievedRequests(email, userId) {
         const ans = [];
         for (let i of doc.requestRecieved) {
             const doc2 = await profileModel.findOne({ email: i.sender.email });
-            const obj = { status: i.status, email: i.sender.email, userId: i.sender.userId, resolvedDate: i.resolvedDate, sendDate: i.sendDate, profilePic: doc2.profilePic, username: doc2.username }
+            const obj = { status: i.status, email: i.sender.email, userId: i.sender.userId, resolvedDate: i.resolvedDate, sendDate: i.sendDate, profilePic: doc2.profilePic, username: doc2.username, fullname: doc2.fullname }
             ans.push(obj);
         }
         console.log(ans);

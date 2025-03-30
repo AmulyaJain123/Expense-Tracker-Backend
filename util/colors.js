@@ -39,4 +39,19 @@ const generateColors = (categories) => {
     return colorMap;
 }
 
+const generateTagColors = (tags) => {
+    const colorMap = [];
+    const tagFields = tags.length;
+    const arr = chroma.scale(["#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe", "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"]).mode("lch").colors(tagFields + 1);
+    console.log(arr);
+    let ind = 0;
+    for (let i of tags) {
+        colorMap.push({ tag: i, color: arr[ind] });
+        ++ind;
+    }
+    colorMap.push({ tag: 'N Others', color: arr.at(-1) });
+    return colorMap;
+}
+
 exports.generateColors = generateColors;
+exports.generateTagColors = generateTagColors;

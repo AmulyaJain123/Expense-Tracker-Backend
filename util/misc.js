@@ -1,63 +1,28 @@
-const tags = [
-    // General Tags
-    "Personal",
-    "Work/Business",
-    "Shared Expense",
-    "Reimbursement",
-    "Recurring",
-    "One-Time",
+const tags = {
+    rec: [
+        "Electronics", "Groceries", "Clothing", "Dining", "Travel", "Utilities",
+        "Credit Card", "Debit Card", "Cash", "UPI", "Net Banking", "Personal",
+        "Business", "Reimbursement", "Gift", "Amazon", "Walmart", "Best Buy",
+        "Local Store", "Paid", "Pending Payment", "Refunded", "GST Applied",
+        "VAT Applied", "Sales Tax", "One-Time", "Recurring"
+    ],
+    war: [
+        "Electronics", "Appliances", "Furniture", "Vehicles", "Gadgets",
+        "Active Warranty", "Expired Warranty", "Pending Claim", "Under Warranty",
+        "Samsung", "LG", "Apple", "Sony", "6 Months", "1 Year", "2 Years",
+        "5 Years", "Online Purchase", "In-Store Purchase", "Gifted",
+        "High Priority", "Medium Priority", "Low Priority", "Home", "Office",
+        "Warehouse", "Insured", "Not Insured", "Physical Document", "Digital Document"
+    ],
+    doc: [
+        "Legal", "Medical", "Financial", "Educational", "Personal", "Invoice",
+        "Contract", "Report", "Certificate", "Notes", "Draft", "Final", "Archived",
+        "Self", "Family", "Business", "Client", "Confidential", "Public", "Internal",
+        "High Priority", "Medium Priority", "Low Priority"
+    ]
+};
 
-    // Expense Categories
-    "Groceries",
-    "Utilities",
-    "Rent",
-    "Travel",
-    "Dining",
-    "Entertainment",
-    "Healthcare",
-    "Education",
-    "Shopping",
-    "Insurance",
-    "Fuel",
-    "Maintenance",
-
-    // Payment Method Tags
-    "Credit Card",
-    "Debit Card",
-    "Cash",
-    "UPI/Bank Transfer",
-    "Wallet/PayPal",
-    "EMI/Loan Payment",
-
-    // Type of Bill
-    "Invoice",
-    "Receipt",
-    "Bill",
-    "Subscription",
-    "Service",
-    "Product Purchase",
-
-    // Frequency Tags
-    "Monthly",
-    "Quarterly",
-    "Yearly",
-    "Daily",
-    "Weekly",
-
-    // Vendor/Service Provider Tags
-    "Electricity",
-    "Water",
-    "Internet",
-    "Mobile",
-    "Gas",
-    "Streaming Service",
-    "Gym Membership",
-
-    // Customizable Tags for Users
-    "Project",
-    "Event",
-    "Vacation",
-];
+const trackTags = ["Food", "Groceries", "Rent", "Utilities", "Entertainment", "Dining", "Transportation", "Fuel", "Travel", "Shopping", "Health", "Insurance", "Education", "Subscriptions", "Loans", "Savings", "Investment", "Tax", "Salary", "Freelance", "Bonus", "Gift", "Charity", "EMI", "Interest", "Credit Card Payment", "Debit Card Payment", "Cash", "UPI", "Net Banking", "Online Purchase", "Refund", "Reimbursement", "Personal Expense", "Business Expense", "Recurring", "One-Time", "Pending", "Completed", "Failed", "Scheduled", "Partially Paid", "Overdue"];
 
 const categories = {
     outgoing: [
@@ -108,3 +73,4 @@ const categories = {
 
 module.exports.tags = tags
 module.exports.categories = categories
+module.exports.trackTags = trackTags

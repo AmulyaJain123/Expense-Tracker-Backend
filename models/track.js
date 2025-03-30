@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { categories } = require('../util/misc');
+const { categories, trackTags } = require('../util/misc');
 
 
 const transactionSchema = mongoose.Schema({
@@ -29,6 +29,14 @@ const transactionSchema = mongoose.Schema({
     },
     transactionId: {
         type: 'String'
+    },
+    desc: {
+        type: 'String',
+        default: ""
+    },
+    tags: {
+        type: ['String'],
+        default: []
     }
 })
 
@@ -43,6 +51,10 @@ const trackSchema = mongoose.Schema({
     categories: {
         type: 'Object',
         default: categories
+    },
+    tags: {
+        type: ['String'],
+        default: trackTags
     },
     transactions: {
         type: [transactionSchema],
@@ -96,6 +108,27 @@ async function fetchCategories(email, userId) {
             throw "failed";
         }
         return doc.categories;
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
+}
+
+async function fetchTags(email, userId) {
+    try {
+        const res = await Track.exists({ email: email });
+        if (!res) {
+            const res = await addEntry(email, userId);
+            if (!res) {
+                throw "userCreationFailed";
+            }
+        }
+
+        const doc = await Track.findOne({ email: email });
+        if (!doc) {
+            throw "failed";
+        }
+        return doc.tags;
     } catch (err) {
         console.log(err);
         return null;
@@ -256,6 +289,58 @@ async function removeTransaction(email, userId, transactionId) {
     }
 }
 
+async function appendTag(email, userId, val) {
+    try {
+        const res = await Track.exists({ email: email });
+        if (!res) {
+            const res = await addEntry(email, userId);
+            if (!res) {
+                throw "userCreationFailed";
+            }
+        }
+        const doc = await Track.findOne({ email: email });
+        if (val.length === 0) {
+            return "Invalid Tag";
+        }
+        if (val.length > 20) {
+            return "Tag Length must be less or equal to 20."
+        }
+        for (let i of doc.tags) {
+            if (i.trim().toLowerCase() === val.toLowerCase()) {
+                return "Tag already exists."
+            }
+        }
+        doc.tags.unshift(val);
+        await doc.save();
+        return true;
+    } catch (err) {
+        console.log(err);
+        return "Something went wrong.";
+    }
+}
+
+async function removeTag(email, userId, val) {
+    try {
+        const res = await Track.exists({ email: email });
+        if (!res) {
+            const res = await addEntry(email, userId);
+            if (!res) {
+                throw "userCreationFailed";
+            }
+        }
+        const doc = await Track.findOne({ email: email });
+        doc.tags = doc.tags.filter((i) => i != val);
+        for (let i of doc.transactions) {
+            i.tags = i.tags.filter((i) => i != val);
+        }
+        await doc.save();
+        return true;
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
+}
+
 
 const Track = mongoose.model('Track', trackSchema);
 
@@ -269,7 +354,9 @@ exports.fetchTransactions = fetchTransactions;
 exports.fetchTransaction = fetchTransaction;
 exports.removeTransaction = removeTransaction;
 exports.getCountOfTransactions = getCountOfTransactions;
-
+exports.fetchTags = fetchTags;
+exports.appendTag = appendTag;
+exports.removeTag = removeTag;
 
 
 

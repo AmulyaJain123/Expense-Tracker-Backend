@@ -1,5 +1,5 @@
 const { getProfile, editUpi, editProfilePic, fetchPublicProfile, editQrCode } = require('../models/profile')
-const { changeUsername: overwriteUsername } = require('../models/user')
+const { changeFullname: overwriteFullname } = require('../models/user')
 const { uploadToCloudinary, t1UploadToCloudinary } = require('../util/cloudinary')
 const fs = require('fs/promises');
 const { root } = require('../util/path')
@@ -54,13 +54,13 @@ const getPublicProfile = async (req, res) => {
     }
 }
 
-const changeUsername = async (req, res) => {
+const changeFullname = async (req, res) => {
     try {
-        const newUsername = req.body.username;
-        if (newUsername === "" || newUsername.length > 20) {
+        const newName = req.body.fullname;
+        if (newName === "" || newName.length > 25) {
             throw "invalid";
         }
-        const result = await overwriteUsername(req.userDetails.email, newUsername);
+        const result = await overwriteFullname(req.userDetails.email, newName);
         if (!result) {
             throw "notfound";
         }
@@ -175,13 +175,13 @@ const qrCodePreview = async (req, res) => {
 }
 
 exports.getMyProfile = getMyProfile;
-exports.changeUsername = changeUsername;
 exports.changeUpi = changeUpi;
 exports.profilePicUpload = profilePicUpload;
 exports.profilePicPreview = profilePicPreview;
 exports.getPublicProfile = getPublicProfile;
 exports.qrCodePreview = qrCodePreview;
 exports.qrCodeUpload = qrCodeUpload;
+exports.changeFullname = changeFullname;
 
 
 

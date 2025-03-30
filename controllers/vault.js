@@ -1,6 +1,6 @@
 const { t3UploadToCloudinary, t2UploadToCloudinary, deleteFolderInCloudinary } = require('../util/cloudinary')
 const { generateId } = require('../util/nodemailer')
-const { addReceipt, fetchTags, deleteTag, appendTag, addWarranty, fetchReceipts, fetchReceipt, removeReceipt, fetchWarranties, fetchWarranty, removeWarranty, changeExp } = require('../models/vault')
+const { addReceipt, fetchTags, deleteTag, appendTag, addWarranty, fetchReceipts, fetchDocs, fetchReceipt, removeReceipt, fetchWarranties, fetchWarranty, removeWarranty, changeExp, addDoc, fetchDoc, removeDoc } = require('../models/vault')
 const fs = require('fs/promises');
 
 const parentFolderName = process.env.CLOUDINARY_PARENT_FOLDER;
@@ -38,6 +38,19 @@ const getTags = async (req, res) => {
 const getReceipts = async (req, res) => {
     try {
         const result = await fetchReceipts(req.userDetails.email, req.userDetails.userId);
+        if (!result) {
+            throw "failed";
+        }
+        res.status(200).json(result);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
+
+const getDocs = async (req, res) => {
+    try {
+        const result = await fetchDocs(req.userDetails.email, req.userDetails.userId);
         if (!result) {
             throw "failed";
         }
@@ -100,6 +113,19 @@ const getReceipt = async (req, res) => {
     }
 }
 
+const getDoc = async (req, res) => {
+    try {
+        const result = await fetchDoc(req.userDetails.email, req.userDetails.userId, req.body.docId);
+        if (!result) {
+            throw "failed";
+        }
+        res.status(200).json(result);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
+
 const deleteReceipt = async (req, res) => {
     try {
         const response = await deleteFolderInCloudinary(`${parentFolderName}/users/${req.userDetails.userId}/vault/receipts/${req.body.recId}`);
@@ -107,6 +133,23 @@ const deleteReceipt = async (req, res) => {
             throw "failed";
         }
         const result = await removeReceipt(req.userDetails.email, req.userDetails.userId, req.body.recId);
+        if (!result) {
+            throw "failed";
+        }
+        res.status(200).json(result);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
+
+const deleteDoc = async (req, res) => {
+    try {
+        const response = await deleteFolderInCloudinary(`${parentFolderName}/users/${req.userDetails.userId}/vault/docs/${req.body.docId}`);
+        if (!response) {
+            throw "failed";
+        }
+        const result = await removeDoc(req.userDetails.email, req.userDetails.userId, req.body.docId);
         if (!result) {
             throw "failed";
         }
@@ -136,7 +179,7 @@ const deleteWarranty = async (req, res) => {
 
 const deleteTags = async (req, res) => {
     try {
-        const result = await deleteTag(req.userDetails.email, req.userDetails.userId, req.body.value);
+        const result = await deleteTag(req.userDetails.email, req.userDetails.userId, req.body.value, req.body.type);
         if (!result) {
             throw "failed";
         }
@@ -149,7 +192,7 @@ const deleteTags = async (req, res) => {
 
 const addTags = async (req, res) => {
     try {
-        const result = await appendTag(req.userDetails.email, req.userDetails.userId, req.body.value.trim());
+        const result = await appendTag(req.userDetails.email, req.userDetails.userId, req.body.value.trim(), req.body.type);
         if (result !== true) {
             res.status(500).json({ error: result });
         }
@@ -211,6 +254,31 @@ const createWarranty = async (req, res) => {
     }
 }
 
+const createDoc = async (req, res) => {
+    try {
+        console.log(req.body);
+        const id = generateId();
+        const result = await t3UploadToCloudinary(req.body.files, `${parentFolderName}/users/${req.userDetails.userId}/vault/docs/${id}`);
+        if (!result) {
+            throw "uploadFailed";
+        }
+        const doc = {
+            docId: id,
+            details: req.body.details,
+            files: result,
+            tags: req.body.tags
+        }
+        const reponse = await addDoc(req.userDetails.email, req.userDetails.userId, doc);
+        if (!reponse) {
+            throw "failed"
+        }
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
+
 
 
 exports.imagePreview = imagePreview;
@@ -219,6 +287,7 @@ exports.createWarranty = createWarranty;
 exports.getTags = getTags;
 exports.getReceipts = getReceipts;
 exports.getWarranties = getWarranties;
+exports.getDocs = getDocs;
 exports.getWarranty = getWarranty;
 exports.renewWarranty = renewWarranty;
 exports.getReceipt = getReceipt;
@@ -226,6 +295,9 @@ exports.deleteReceipt = deleteReceipt;
 exports.deleteWarranty = deleteWarranty;
 exports.deleteTags = deleteTags;
 exports.addTags = addTags;
+exports.createDoc = createDoc;
+exports.getDoc = getDoc;
+exports.deleteDoc = deleteDoc;
 
 
 

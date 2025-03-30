@@ -10,8 +10,22 @@ const fs = require('fs/promises');
 const sendFriendRequestRecievedNotification = async (sendEmail, sendUId, recEmail, recUId) => {
     try {
         const user = await getProfile(sendEmail);
-        const notification = { message: `${user.username} send you a friend request.`, topic: 'friendRequestRecieved', recieveDate: new Date().toUTCString(), data: { username: user.username, profilePic: user.profilePic, userId: user.userId } };
+        const notification = { message: `@${user.username} send you a friend request.`, topic: 'friendRequestRecieved', recieveDate: new Date().toUTCString(), data: { username: user.username, profilePic: user.profilePic, userId: user.userId, fullname: user.fullname } };
         const result = await newNotification(recEmail, recUId, notification);
+        if (!result) {
+            throw "notfound";
+        }
+        return true;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+const sendLoginAttemptNotification = async (email, userId, time) => {
+    try {
+        const notification = { message: `A Login Attempt with your email was made at ${time}.`, topic: 'loginActivityDetected', recieveDate: new Date().toUTCString(), data: { timestamp: time } };
+        const result = await newNotification(email, userId, notification);
         if (!result) {
             throw "notfound";
         }
@@ -25,7 +39,7 @@ const sendFriendRequestRecievedNotification = async (sendEmail, sendUId, recEmai
 const sendRemoveFriendNotification = async (sendEmail, sendUId, recEmail, recUId) => {
     try {
         const user = await getProfile(sendEmail);
-        const notification = { message: `${user.username} removed you from his friends.`, topic: 'friendRemoved', recieveDate: new Date().toUTCString(), data: { username: user.username, profilePic: user.profilePic, userId: user.userId } };
+        const notification = { message: `@${user.username} removed you from his friends.`, topic: 'friendRemoved', recieveDate: new Date().toUTCString(), data: { username: user.username, profilePic: user.profilePic, userId: user.userId, fullname: user.fullname } };
         const result = await newNotification(recEmail, recUId, notification);
         if (!result) {
             throw "notfound";
@@ -40,7 +54,7 @@ const sendRemoveFriendNotification = async (sendEmail, sendUId, recEmail, recUId
 const sendCloseRequestNotification = async (sendEmail, sendUId, recEmail, recUId, val) => {
     try {
         const user = await getProfile(sendEmail);
-        const notification = { message: `${user.username} ${val ? 'accepted' : 'rejected'} your request.`, topic: val ? 'friendRequestAccepted' : 'friendRequestRejected', recieveDate: new Date().toUTCString(), data: { username: user.username, profilePic: user.profilePic, userId: user.userId } };
+        const notification = { message: `@${user.username} ${val ? 'accepted' : 'rejected'} your request.`, topic: val ? 'friendRequestAccepted' : 'friendRequestRejected', recieveDate: new Date().toUTCString(), data: { username: user.username, profilePic: user.profilePic, userId: user.userId, fullname: user.fullname } };
         const result = await newNotification(recEmail, recUId, notification);
         if (!result) {
             throw "notfound";
@@ -57,7 +71,7 @@ const sendSplitShareNotification = async (sendEmail, sendUId, recUId, splitId) =
         const user = await getProfile(sendEmail);
         const user2 = await getProfileByuserId(recUId);
         const split = await fetchSavedSplit(sendEmail, sendUId, splitId);
-        const notification = { message: `${user.username} shared a split with you`, topic: 'splitShared', recieveDate: new Date().toUTCString(), data: { username: user.username, profilePic: user.profilePic, userId: user.userId, splitName: split.splitInfo.splitName } };
+        const notification = { message: `@${user.username} shared a split with you`, topic: 'splitShared', recieveDate: new Date().toUTCString(), data: { username: user.username, profilePic: user.profilePic, userId: user.userId, splitName: split.splitInfo.splitName, fullname: user.fullname } };
         const result = await newNotification(user2.email, user2.userId, notification);
         if (!result) {
             throw "notfound";
@@ -88,6 +102,7 @@ exports.getAllNotifications = getAllNotifications;
 exports.sendRemoveFriendNotification = sendRemoveFriendNotification;
 exports.sendCloseRequestNotification = sendCloseRequestNotification;
 exports.sendSplitShareNotification = sendSplitShareNotification;
+exports.sendLoginAttemptNotification = sendLoginAttemptNotification;
 
 
 

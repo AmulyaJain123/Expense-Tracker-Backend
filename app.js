@@ -20,7 +20,14 @@ const { friendsRouter } = require('./routes/friends')
 const { splitsRouter } = require('./routes/splits')
 const { trackRouter } = require('./routes/track')
 const { notificationsRouter } = require('./routes/notifications')
-const { readNotifications } = require('./models/notifications')
+const { openRouter } = require('./routes/open');
+const { messageRouter } = require('./routes/message');
+
+const { readNotifications, removeNotification } = require('./models/notifications')
+const { msgSeen, removeChat, deleteMsg, clearChat, blockChat, unblockChat } = require('./models/message')
+
+const { newMsg } = require('./controllers/message')
+
 
 
 
@@ -51,6 +58,8 @@ app.use((req, res, next) => {
 
 app.use('/auth', authRouter)
 
+app.use('/open', openRouter);
+
 app.use(isAuth);
 
 app.use('/profile', profileRouter)
@@ -64,6 +73,8 @@ app.use('/split', splitsRouter)
 app.use('/track', trackRouter)
 
 app.use('/notifications', notificationsRouter)
+
+app.use('/message', messageRouter);
 
 
 const io = new Server(server, {
@@ -114,12 +125,20 @@ io.on('connection', (socket) => {
         }
 
         socket.join(socket.userDetails.userId);
+        for (let i of userToSocketMap[socket.userDetails.userId]) {
+            if (i != socket.id) {
+                io.to(i).emit('socket-activity', false);
+            }
+        }
+
 
         socket.on('disconnect', () => {
             userToSocketMap[socket.userDetails.userId].splice(userToSocketMap[socket.userDetails.userId].indexOf(socket.id), 1);
             if (userToSocketMap[socket.userDetails.userId].length === 0) {
                 delete userToSocketMap[socket.userDetails.userId];
             }
+            console.log(userToSocketMap);
+
         })
 
         socket.on('test', (str) => {
@@ -130,6 +149,91 @@ io.on('connection', (socket) => {
             console.log(bool)
             readNotifications(socket.userDetails.email, socket.userDetails.userId);
         })
+
+        socket.on('send-msg', (info, cb) => {
+            console.log(info);
+            newMsg(socket.userDetails.email, socket.userDetails.userId, info).then((val) => {
+                cb(val);
+            }).catch((err) => {
+                cb(false);
+            });
+
+
+        })
+
+        socket.on('message-seen', (info) => {
+            console.log(info);
+            msgSeen(socket.userDetails.email, socket.userDetails.userId, info);
+        })
+
+        socket.on('delete-chat', (info, cb) => {
+            console.log(info);
+            removeChat(socket.userDetails.email, socket.userDetails.userId, info).then((val) => {
+                cb(val);
+            }).catch((err) => {
+                console.log(err)
+                cb(false);
+            });
+
+
+        })
+
+        socket.on('delete-msg', (info, cb) => {
+            console.log(info);
+            deleteMsg(socket.userDetails.email, socket.userDetails.userId, info).then((val) => {
+                cb(val);
+            }).catch((err) => {
+                console.log(err)
+                cb(false);
+            });
+
+
+        })
+
+        socket.on('clear-chat', (info, cb) => {
+            console.log(info);
+            clearChat(socket.userDetails.email, socket.userDetails.userId, info).then((val) => {
+                cb(val);
+            }).catch((err) => {
+                console.log(err)
+                cb(false);
+            });
+
+
+        })
+
+        socket.on('block-chat', (info, cb) => {
+            console.log(info);
+            blockChat(socket.userDetails.email, socket.userDetails.userId, info).then((val) => {
+                cb(val);
+            }).catch((err) => {
+                console.log(err)
+                cb(false);
+            });
+        })
+
+        socket.on('unblock-chat', (info, cb) => {
+            console.log(info);
+            unblockChat(socket.userDetails.email, socket.userDetails.userId, info).then((val) => {
+                cb(val);
+            }).catch((err) => {
+                console.log(err)
+                cb(false);
+            });
+        })
+
+        socket.on('delete-notification', (info, cb) => {
+            console.log(info);
+            removeNotification(socket.userDetails.email, socket.userDetails.userId, info).then((val) => {
+                cb(val);
+            }).catch((err) => {
+                console.log(err)
+                cb(false);
+            });
+
+
+        })
+
 
         console.log(userToSocketMap);
     } catch (err) {

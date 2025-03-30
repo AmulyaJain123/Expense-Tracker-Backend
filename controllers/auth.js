@@ -1,10 +1,13 @@
-const { findUserByEmail, addUser, changePass } = require('../models/user');
+const { findUserByEmail, addUser, changePass, findUserByUsername } = require('../models/user');
 const { getProfile, pushActivity } = require('../models/profile')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { authTransport, generateOtp, generateUserId } = require('../util/nodemailer')
 const { storeOtp, verifyOtp } = require('../models/auth')
 const { fetchUnseenNotifications } = require('../models/notifications')
+const { fetchUnseenMessages } = require('../models/message');
+const { sendLoginAttemptNotification } = require('./notifications');
+
 
 const dom = process.env.STATUS === 'dev' ? 'localhost' : process.env.BACKEND_DOMAIN;
 
@@ -134,11 +137,15 @@ const resetCheckOtp = async (req, res) => {
 }
 
 const createAccount = async (req, res) => {
-    const { email, username, password } = req.body;
+    const { email, username, password, fullname } = req.body;
+    const user = await findUserByUsername(username);
+    if (user) {
+        return res.status(500).json('username-taken');
+    }
     const userId = generateUserId();
     const newPassword = await bcrypt.hash(password, 12);
     console.log(userId, email, password);
-    const result = await addUser(email, newPassword, username, userId);
+    const result = await addUser(email, newPassword, username, userId, fullname);
     if (!result) {
         res.status(500).json("failed");
     } else if (result) {
@@ -179,6 +186,7 @@ const signIn = async (req, res) => {
         let { email, password } = req.body;
         email = email.toLowerCase().trim();
         const doc = await findUserByEmail(email);
+        const currTime = new Date().toUTCString();
 
         if (doc) {
             const result = await bcrypt.compare(password, doc.password);
@@ -192,6 +200,7 @@ const signIn = async (req, res) => {
             } else {
                 res.status(500).json("password wrong")
             }
+            const res7 = await sendLoginAttemptNotification(email, doc.userId, currTime);
         } else {
             res.status(500).json("notfound");
         }
@@ -268,11 +277,13 @@ const getDetails = async (req, res) => {
             }
             const finalDoc = await getProfile(payload.email);
             const notifications = await fetchUnseenNotifications(payload.email, payload.userId);
+            const messages = await fetchUnseenMessages(payload.email, payload.userId);
+
             if (!finalDoc) {
                 throw "notfound";
             }
 
-            res.status(200).json([finalDoc, notifications]);
+            res.status(200).json([finalDoc, notifications, messages]);
         } else {
             throw "notfound";
         }
