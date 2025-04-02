@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { imagePreview, createReceipt, getTags, deleteTags, addTags, createWarranty, getReceipts, getReceipt, deleteReceipt, getWarranties, getWarranty, deleteWarranty, renewWarranty, createDoc, getDocs, getDoc, deleteDoc } = require('../controllers/vault');
+const { imagePreview, createReceipt, getTags, deleteTags, addTags, createWarranty, getReceipts,
+    getReceipt, deleteReceipt, getWarranties, getWarranty, deleteWarranty, renewWarranty, createDoc,
+    getDocs, getDoc, deleteDoc, editTag } = require('../controllers/vault');
 const { upload } = require('../util/multer');
 
 router.post('/imagepreview/:par1', upload.single('billImg'), imagePreview);
@@ -34,6 +36,8 @@ router.post('/deletewarranty', deleteWarranty);
 router.post('/deletedoc', deleteDoc);
 
 router.post('/deletetag', deleteTags);
+
+router.post('/edittag', editTag);
 
 router.post('/addtag', addTags);
 

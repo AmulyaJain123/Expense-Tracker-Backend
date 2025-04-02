@@ -319,6 +319,128 @@ async function appendTag(email, userId, val) {
     }
 }
 
+async function renameTag(email, userId, preVal, newVal) {
+    try {
+        const res = await Track.exists({ email: email });
+        if (!res) {
+            const res = await addEntry(email, userId);
+            if (!res) {
+                throw "userCreationFailed";
+            }
+        }
+        const doc = await Track.findOne({ email: email });
+        if (newVal.length === 0) {
+            return "Invalid Tag";
+        }
+        if (newVal.length > 20) {
+            return "Tag Length must be less or equal to 20."
+        }
+        if (!doc.tags.some((i) => i.trim().toLowerCase() === preVal.trim().toLowerCase())) {
+            return "Old Tag does not exists.";
+        }
+        if (doc.tags.some((i) => i.trim().toLowerCase() === newVal.trim().toLowerCase())) {
+            return "New Tag already exists.";
+        }
+        doc.transactions.forEach((i) => {
+            i.tags = i.tags.map((j) => {
+                if (j.trim().toLowerCase() === preVal.trim().toLowerCase()) {
+                    return newVal;
+                }
+                return j;
+            })
+        })
+        doc.tags = doc.tags.map((i) => {
+            if (i.trim().toLowerCase() === preVal.trim().toLowerCase()) {
+                return newVal;
+            }
+            return i;
+        })
+        await doc.save();
+        return true;
+    } catch (err) {
+        console.log(err);
+        return "Something went wrong.";
+    }
+}
+
+async function renameSubCat(email, userId, preVal, newVal) {
+    try {
+        const res = await Track.exists({ email: email });
+        if (!res) {
+            const res = await addEntry(email, userId);
+            if (!res) {
+                throw "userCreationFailed";
+            }
+        }
+        const doc = await Track.findOne({ email: email });
+        if (newVal[2].length === 0) {
+            return "Invalid Category";
+        }
+        if (newVal[2].length > 20) {
+            return "Category Length must be less or equal to 20."
+        }
+        if (!doc.categories[preVal[0]].some((i) => i.name.trim().toLowerCase() === preVal[1].trim().toLowerCase()) || !doc.categories[preVal[0]].find((i) => i.name.trim().toLowerCase() === preVal[1].trim().toLowerCase())?.categories.some((j) => j.trim().toLowerCase() === preVal[2].trim().toLowerCase())) {
+            return "Old Category does not exists.";
+        }
+        if (!doc.categories[newVal[0]].some((i) => i.name.trim().toLowerCase() === newVal[1].trim().toLowerCase())) {
+            return 'Invalid Migration.'
+        }
+        if (doc.categories[preVal[0]].find((i) => i.name.trim().toLowerCase() === newVal[1].trim().toLowerCase())?.categories.some((j) => j.trim().toLowerCase() === newVal[2].trim().toLowerCase())) {
+            return "New Category already exists.";
+        }
+        doc.transactions.forEach((i) => {
+            if (i.category.length === 3 && i.category[0].toLowerCase() === preVal[0].toLowerCase() && i.category[1].toLowerCase() === preVal[1].toLowerCase() && i.category[2].toLowerCase() === preVal[2].toLowerCase()) {
+                i.category = newVal;
+            }
+        })
+        doc.categories[preVal[0]].find((i) => i.name.toLowerCase() === preVal[1].toLowerCase()).categories = doc.categories[preVal[0]].find((i) => i.name.toLowerCase() === preVal[1].toLowerCase()).categories.filter((j) => j.toLowerCase() != preVal[2].toLowerCase());
+        doc.categories[newVal[0]].find((i) => i.name.toLowerCase() === newVal[1].toLowerCase()).categories.unshift(newVal[2]);
+        doc.markModified('categories', 'transactions.category');
+        await doc.save();
+        return true;
+    } catch (err) {
+        console.log(err);
+        return "Something went wrong.";
+    }
+}
+
+async function renameCat(email, userId, preVal, newVal) {
+    try {
+        const res = await Track.exists({ email: email });
+        if (!res) {
+            const res = await addEntry(email, userId);
+            if (!res) {
+                throw "userCreationFailed";
+            }
+        }
+        const doc = await Track.findOne({ email: email });
+        if (newVal[1].length === 0) {
+            return "Invalid Group";
+        }
+        if (newVal[1].length > 20) {
+            return "Group Length must be less or equal to 20."
+        }
+        if (!doc.categories[preVal[0]].some((i) => i.name.trim().toLowerCase() === preVal[1].trim().toLowerCase())) {
+            return "Old Group does not exists.";
+        }
+        if (doc.categories[preVal[0]].some((i) => i.name.trim().toLowerCase() === newVal[1].trim().toLowerCase())) {
+            return "New Group already exists.";
+        }
+        doc.transactions.forEach((i) => {
+            if (i.category.length === 3 && i.category[0].toLowerCase() === preVal[0].toLowerCase() && i.category[1].toLowerCase() === preVal[1].toLowerCase()) {
+                i.category[1] = newVal[1];
+            }
+        })
+        doc.categories[preVal[0]].find((i) => i.name.toLowerCase() === preVal[1].toLowerCase()).name = newVal[1];
+        doc.markModified('categories', 'transactions.category');
+        await doc.save();
+        return true;
+    } catch (err) {
+        console.log(err);
+        return "Something went wrong.";
+    }
+}
+
 async function removeTag(email, userId, val) {
     try {
         const res = await Track.exists({ email: email });
@@ -357,6 +479,9 @@ exports.getCountOfTransactions = getCountOfTransactions;
 exports.fetchTags = fetchTags;
 exports.appendTag = appendTag;
 exports.removeTag = removeTag;
+exports.renameTag = renameTag;
+exports.renameSubCat = renameSubCat;
+exports.renameCat = renameCat;
 
 
 

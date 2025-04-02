@@ -1,6 +1,8 @@
 const { t3UploadToCloudinary, t2UploadToCloudinary, deleteFolderInCloudinary } = require('../util/cloudinary')
 const { generateId } = require('../util/nodemailer')
-const { addReceipt, fetchTags, deleteTag, appendTag, addWarranty, fetchReceipts, fetchDocs, fetchReceipt, removeReceipt, fetchWarranties, fetchWarranty, removeWarranty, changeExp, addDoc, fetchDoc, removeDoc } = require('../models/vault')
+const { addReceipt, fetchTags, deleteTag, appendTag, addWarranty, fetchReceipts, fetchDocs,
+    fetchReceipt, removeReceipt, fetchWarranties, fetchWarranty, removeWarranty, changeExp,
+    addDoc, fetchDoc, removeDoc, renameTag } = require('../models/vault')
 const fs = require('fs/promises');
 
 const parentFolderName = process.env.CLOUDINARY_PARENT_FOLDER;
@@ -203,6 +205,19 @@ const addTags = async (req, res) => {
     }
 }
 
+const editTag = async (req, res) => {
+    try {
+        const result = await renameTag(req.userDetails.email, req.userDetails.userId, req.body.preVal.trim(), req.body.newVal.trim(), req.body.type);
+        if (result !== true) {
+            res.status(500).json({ error: result });
+        }
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Something went wrong.' });
+    }
+}
+
 
 const createReceipt = async (req, res) => {
     try {
@@ -298,6 +313,7 @@ exports.addTags = addTags;
 exports.createDoc = createDoc;
 exports.getDoc = getDoc;
 exports.deleteDoc = deleteDoc;
+exports.editTag = editTag;
 
 
 

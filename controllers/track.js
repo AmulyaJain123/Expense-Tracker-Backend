@@ -1,4 +1,5 @@
-const { fetchCategories, appendCategory, removeCategory, addTransaction, fetchTransactions, fetchTransaction, removeTransaction, fetchTags, appendTag, removeTag } = require('../models/track')
+const { fetchCategories, appendCategory, removeCategory, addTransaction, fetchTransactions, fetchTransaction,
+    removeTransaction, fetchTags, appendTag, removeTag, renameTag, renameSubCat, renameCat } = require('../models/track')
 const fs = require('fs/promises');
 const { dummyData } = require('../util/dummy')
 const { generateId } = require('../util/nodemailer')
@@ -198,6 +199,48 @@ const deleteTag = async (req, res) => {
     }
 }
 
+const editTag = async (req, res) => {
+    try {
+        if (RegExp(/\b\d+ others\b/i).test(req.body.newVal.trim())) {
+            return res.status(500).json({ error: 'Tag Forbidden' });
+        }
+        const result = await renameTag(req.userDetails.email, req.userDetails.userId, req.body.preVal.trim(), req.body.newVal.trim());
+        if (result !== true) {
+            res.status(500).json({ error: result });
+        }
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Something went wrong.' });
+    }
+}
+
+const editSubCat = async (req, res) => {
+    try {
+        const result = await renameSubCat(req.userDetails.email, req.userDetails.userId, req.body.preVal, req.body.newVal);
+        if (result !== true) {
+            res.status(500).json({ error: result });
+        }
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Something went wrong.' });
+    }
+}
+
+const editCat = async (req, res) => {
+    try {
+        const result = await renameCat(req.userDetails.email, req.userDetails.userId, req.body.preVal, req.body.newVal);
+        if (result !== true) {
+            res.status(500).json({ error: result });
+        }
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Something went wrong.' });
+    }
+}
+
 
 
 
@@ -215,5 +258,7 @@ exports.getCategoriesNTags = getCategoriesNTags;
 exports.addTags = addTags;
 exports.getTags = getTags;
 exports.deleteTag = deleteTag;
-
+exports.editTag = editTag;
+exports.editSubCat = editSubCat;
+exports.editCat = editCat;
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getCategories, getCategoriesNTags, addCategory, deleteCategory, createTransaction, getTransactions, getTransactionsNCategories,
-    getTransaction, deleteTransaction, getDashboardData, addTags, getTags, deleteTag } = require('../controllers/track');
+    getTransaction, deleteTransaction, getDashboardData, addTags, getTags, deleteTag, editTag, editSubCat, editCat } = require('../controllers/track');
 
 
 router.get('/getcategories', getCategories);
@@ -29,6 +29,13 @@ router.post('/addtag', addTags);
 router.get('/gettags', getTags);
 
 router.post('/deletetag', deleteTag);
+
+router.post('/edittag', editTag);
+
+router.post('/editsubcat', editSubCat);
+
+router.post('/editcat', editCat);
+
 
 
 

@@ -537,6 +537,53 @@ async function appendTag(email, userId, val, type) {
     }
 }
 
+async function renameTag(email, userId, preVal, newVal, type) {
+    try {
+        const res = await Vault.exists({ email: email });
+        if (!res) {
+            const res = await addEntry(email, userId);
+            if (!res) {
+                throw "userCreationFailed";
+            }
+        }
+        const doc = await Vault.findOne({ email: email });
+        if (newVal.length === 0) {
+            return "Invalid Tag";
+        }
+        if (newVal.length > 20) {
+            return "Tag Length must be less or equal to 20."
+        }
+        if (!doc.tags[type].some((i) => i.trim().toLowerCase() === preVal.trim().toLowerCase())) {
+            return "Old Tag does not exists.";
+        }
+        if (doc.tags[type].some((i) => i.trim().toLowerCase() === newVal.trim().toLowerCase())) {
+            return "New Tag already exists.";
+        }
+
+        let enumStr = type === 'rec' ? 'receipts' : type === 'war' ? 'warranty' : 'doc';
+        doc[enumStr].forEach((i) => {
+            i.tags = i.tags.map((j) => {
+                if (j.trim().toLowerCase() === preVal.trim().toLowerCase()) {
+                    return newVal;
+                }
+                return j;
+            })
+        })
+
+        doc.tags[type] = doc.tags[type].map((i) => {
+            if (i.trim().toLowerCase() === preVal.trim().toLowerCase()) {
+                return newVal;
+            }
+            return i;
+        })
+        await doc.save();
+        return true;
+    } catch (err) {
+        console.log(err);
+        return "Something went wrong.";
+    }
+}
+
 
 
 
@@ -562,6 +609,7 @@ exports.getCountOfVault = getCountOfVault;
 exports.fetchDocs = fetchDocs;
 exports.fetchDoc = fetchDoc;
 exports.removeDoc = removeDoc;
+exports.renameTag = renameTag;
 
 
 
