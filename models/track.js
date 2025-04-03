@@ -6,6 +6,9 @@ const transactionSchema = mongoose.Schema({
     createdOn: {
         type: 'String'
     },
+    editedOn: {
+        type: 'String'
+    },
     category: {
         type: ['String']
     },
@@ -267,6 +270,34 @@ async function addTransaction(email, userId, transaction) {
     }
 }
 
+async function updateTransaction(email, userId, transaction) {
+    try {
+        const res = await Track.exists({ email: email });
+        if (!res) {
+            const res = await addEntry(email, userId);
+            if (!res) {
+                throw "userCreationFailed";
+            }
+        }
+        const doc = await Track.findOne({ email: email });
+        if (!doc) {
+            throw "failed";
+        }
+        const num = doc.transactions.findIndex((i) => i.transactionId === transaction.transactionId);
+        if (num == -1) {
+            throw 'notfound';
+        }
+        console.log(doc.transactions[num], transaction, { ...transaction, createdOn: doc.transactions[num].createdOn });
+        doc.transactions[num] = { ...transaction, createdOn: doc.transactions[num].createdOn };
+        doc.markModified('transactions');
+        await doc.save();
+        return true;
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
+}
+
 async function removeTransaction(email, userId, transactionId) {
     try {
         const res = await Track.exists({ email: email });
@@ -441,6 +472,51 @@ async function renameCat(email, userId, preVal, newVal) {
     }
 }
 
+async function appendCategoryOnSpot(email, userId, value) {
+    try {
+        const res = await Track.exists({ email: email });
+        if (!res) {
+            const res = await addEntry(email, userId);
+            if (!res) {
+                throw "userCreationFailed";
+            }
+        }
+        const doc = await Track.findOne({ email: email });
+        if (value.length == 2) {
+            if (value[1].length === 0) {
+                return "Invalid Group";
+            }
+            if (value[1].length > 20) {
+                return "Group Length must be less or equal to 20."
+            }
+            if (doc.categories[value[0]].some((i) => i.name.trim().toLowerCase() === value[1].trim().toLowerCase())) {
+                return "Group already exists.";
+            }
+            doc.categories[value[0]].unshift({ name: value[1].trim(), categories: [] });
+        } else {
+            if (value[2].length === 0) {
+                return "Invalid Category";
+            }
+            if (value[2].length > 20) {
+                return "Category Length must be less or equal to 20."
+            }
+            if (!doc.categories[value[0]].some((i) => i.name.trim().toLowerCase() === value[1].trim().toLowerCase())) {
+                return 'Group does not exists.'
+            }
+            if (doc.categories[value[0]].find((i) => i.name.trim().toLowerCase() === value[1].trim().toLowerCase())?.categories.some((j) => j.trim().toLowerCase() === value[2].trim().toLowerCase())) {
+                return "Category already exists."
+            }
+            doc.categories[value[0]].find((i) => i.name.toLowerCase() === value[1].toLowerCase()).categories.unshift(value[2].trim());
+        }
+        doc.markModified('categories');
+        await doc.save();
+        return true;
+    } catch (err) {
+        console.log(err);
+        return "Something went wrong.";
+    }
+}
+
 async function removeTag(email, userId, val) {
     try {
         const res = await Track.exists({ email: email });
@@ -482,6 +558,8 @@ exports.removeTag = removeTag;
 exports.renameTag = renameTag;
 exports.renameSubCat = renameSubCat;
 exports.renameCat = renameCat;
+exports.appendCategoryOnSpot = appendCategoryOnSpot;
+exports.updateTransaction = updateTransaction;
 
 
 

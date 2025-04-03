@@ -1,5 +1,5 @@
 const { fetchCategories, appendCategory, removeCategory, addTransaction, fetchTransactions, fetchTransaction,
-    removeTransaction, fetchTags, appendTag, removeTag, renameTag, renameSubCat, renameCat } = require('../models/track')
+    removeTransaction, fetchTags, appendTag, removeTag, renameTag, renameSubCat, renameCat, appendCategoryOnSpot, updateTransaction } = require('../models/track')
 const fs = require('fs/promises');
 const { dummyData } = require('../util/dummy')
 const { generateId } = require('../util/nodemailer')
@@ -93,6 +93,21 @@ const getTransaction = async (req, res) => {
     }
 }
 
+const getEditTransaction = async (req, res) => {
+    try {
+        const transaction = await fetchTransaction(req.userDetails.email, req.userDetails.userId, req.body.transactionId);
+        const categories = await fetchCategories(req.userDetails.email, req.userDetails.userId);
+        const tags = await fetchTags(req.userDetails.email, req.userDetails.userId);
+        if (!transaction || !categories || !tags) {
+            throw "notfound";
+        }
+        res.status(200).json({ transaction, categories, tags });
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
+
 const addCategory = async (req, res) => {
     try {
         const { value, path } = req.body;
@@ -140,6 +155,27 @@ const createTransaction = async (req, res) => {
         const obj = JSON.parse(JSON.stringify(req.body));
         obj.transactionId = `${generateId()}`;
         const result = await addTransaction(req.userDetails.email, req.userDetails.userId, obj);
+
+        if (!result) {
+            throw "notfound";
+        }
+        // for (let i of dummyData) {
+        //     const result = await addTransaction(req.userDetails.email, req.userDetails.userId, i);
+        //     if (!result) {
+        //         throw "notfound";
+        //     }
+        // }
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+}
+
+const editTransaction = async (req, res) => {
+    try {
+        const obj = JSON.parse(JSON.stringify(req.body));
+        const result = await updateTransaction(req.userDetails.email, req.userDetails.userId, obj);
 
         if (!result) {
             throw "notfound";
@@ -241,6 +277,19 @@ const editCat = async (req, res) => {
     }
 }
 
+const addCategoryOnSpot = async (req, res) => {
+    try {
+        const result = await appendCategoryOnSpot(req.userDetails.email, req.userDetails.userId, req.body.value);
+        if (result !== true) {
+            res.status(500).json({ error: result });
+        }
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Something went wrong.' });
+    }
+}
+
 
 
 
@@ -261,4 +310,7 @@ exports.deleteTag = deleteTag;
 exports.editTag = editTag;
 exports.editSubCat = editSubCat;
 exports.editCat = editCat;
+exports.getEditTransaction = getEditTransaction;
+exports.addCategoryOnSpot = addCategoryOnSpot;
+exports.editTransaction = editTransaction;
 
