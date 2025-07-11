@@ -37,6 +37,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
 
+
 app.use(bodyParser.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, 'public')))
@@ -47,6 +48,8 @@ app.use(cors({
     origin: FRONTEND_URL,
     credentials: true
 }));
+
+app.options('*', cors()); 
 
 
 app.use(cookieParser())
